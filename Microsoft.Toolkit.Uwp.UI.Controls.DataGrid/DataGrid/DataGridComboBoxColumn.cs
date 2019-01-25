@@ -31,6 +31,7 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
         private const string DATAGRIDCOMBOBOXCOLUMN_foregroundName = "Foreground";
         private const string DATAGRIDCOMBOBOXCOLUMN_itemsSourceName = "ItemsSource";
         private const string DATAGRIDCOMBOBOXCOLUMN_displayMemberPathName = "DisplayMemberPath";
+        private const string DATAGRIDCOMBOBOXCOLUMN_valueMemberPathName = "ValueMemberPath";
         private const double DATAGRIDCOMBOBOXCOLUMN_leftMargin = 12.0;
         private const double DATAGRIDCOMBOBOXCOLUMN_rightMargin = 12.0;
 
@@ -82,6 +83,25 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
         {
             get { return (string)GetValue(DisplayMemberPathProperty); }
             set { SetValue(DisplayMemberPathProperty, value); }
+        }
+
+        /// <summary>
+        /// Identifies the ValueMemberPath dependency property.
+        /// </summary>
+        public static readonly DependencyProperty ValueMemberPathProperty =
+            DependencyProperty.Register(
+                DATAGRIDCOMBOBOXCOLUMN_valueMemberPathName,
+                typeof(string),
+                typeof(DataGridComboBoxColumn),
+                new PropertyMetadata(default(string)));
+
+        /// <summary>
+        /// Gets or sets the name or path of the property that is used as value in the ComboBox.
+        /// </summary>
+        public string ValueMemberPath
+        {
+            get { return (string)GetValue(ValueMemberPathProperty); }
+            set { SetValue(ValueMemberPathProperty, value); }
         }
 
         /// <summary>
@@ -580,15 +600,34 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
 
         private string GetDisplayValue(object dataItem)
         {
-            if (Binding?.Path != null && dataItem != null)
+            if (this.Binding != null)
             {
-                var value = dataItem.GetType().GetProperty(Binding.Path.Path).GetValue(dataItem);
+                if (dataItem != null)
+                {
+                    if (this.Binding.Path != null)
+                    {
+                        if (!string.IsNullOrEmpty(this.ValueMemberPath))
+                        {
+                            var value = dataItem.GetType().GetProperty(this.Binding.Path.Path).GetValue(dataItem);
 
-                var item = ItemsSource?.Cast<object>().FirstOrDefault(x => x.GetType().GetProperty(Binding.Path.Path).GetValue(x).Equals(value));
+                            var item = this.ItemsSource?.Cast<object>().FirstOrDefault(x => x.GetType().GetProperty(this.ValueMemberPath).GetValue(x).Equals(value));
 
-                var displayValue = item?.GetType().GetProperty(DisplayMemberPath).GetValue(item) ?? string.Empty;
+                            var displayValue = item?.GetType().GetProperty(this.DisplayMemberPath).GetValue(item) ?? string.Empty;
 
-                return displayValue as string ?? displayValue.ToString();
+                            return displayValue as string ?? displayValue.ToString();
+                        }
+                        else
+                        {
+                            var value = dataItem.GetType().GetProperty(this.Binding.Path.Path).GetValue(dataItem);
+
+                            var item = this.ItemsSource?.Cast<object>().FirstOrDefault(x => x.GetType().GetProperty(this.Binding.Path.Path).GetValue(x).Equals(value));
+
+                            var displayValue = item?.GetType().GetProperty(this.DisplayMemberPath).GetValue(item) ?? string.Empty;
+
+                            return displayValue as string ?? displayValue.ToString();
+                        }
+                    }
+                }
             }
 
             return string.Empty;
@@ -631,9 +670,19 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
             {
                 var item = ItemsSource.Cast<object>().FirstOrDefault();
 
-                if (item != null && !item.GetType().GetProperties().Any(y => y.Name.Equals(Binding.Path.Path)))
+                if (!string.IsNullOrEmpty(this.ValueMemberPath))
                 {
-                    throw DataGridError.DataGridComboBoxColumn.UnknownItemsSourcePath(Binding);
+                    if (item != null && !item.GetType().GetProperties().Any(y => y.Name.Equals(this.ValueMemberPath)))
+                    {
+                        throw DataGridError.DataGridComboBoxColumn.UnknownValueMemberPath(this.ValueMemberPath, item.GetType());
+                    }
+                }
+                else
+                {
+                    if (item != null && !item.GetType().GetProperties().Any(y => y.Name.Equals(Binding.Path.Path)))
+                    {
+                        throw DataGridError.DataGridComboBoxColumn.UnknownItemsSourcePath(Binding);
+                    }
                 }
             }
         }

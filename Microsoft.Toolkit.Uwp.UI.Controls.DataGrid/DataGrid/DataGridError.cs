@@ -202,6 +202,11 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls.DataGridInternals
                 return new ArgumentException(Format("DisplayMemberPath {0} could not be found in type {1}. Ensure that the value has been set correctly and note that for built-in types DisplayMemberPath should not be used.", displayMemberPath, type.FullName));
             }
 
+            public static ArgumentException UnknownValueMemberPath(string valueMemberPath, Type type)
+            {
+                return new ArgumentException(Format("ValueMemberPath {0} could not be found in type {1}. Ensure that the value has been set correctly and note that for built-in types ValueMemberPath should not be used.", valueMemberPath, type.FullName));
+            }
+
             public static ArgumentException UnknownItemsSourcePath(Binding binding)
             {
                 return new ArgumentException(Format("The ItemsSource elements do not contain a property {0}. Ensure that the binding path has been set correctly.", binding.Path.Path));
