@@ -610,7 +610,8 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
                         {
                             var value = dataItem.GetType().GetProperty(this.Binding.Path.Path).GetValue(dataItem);
 
-                            var item = this.ItemsSource?.Cast<object>().FirstOrDefault(x => x.GetType().GetProperty(this.ValueMemberPath).GetValue(x).Equals(value));
+                            var item = this.ItemsSource?.Cast<object>().FirstOrDefault(
+                                x => Equals(x.GetType().GetProperty(this.ValueMemberPath).GetValue(x), value));
 
                             var displayValue = item?.GetType().GetProperty(this.DisplayMemberPath).GetValue(item) ?? string.Empty;
 
